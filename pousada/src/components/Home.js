@@ -145,7 +145,7 @@ function Home() {
               </div>
             </div>
 
-            
+
           </div>
 
           <div className="col-sm-2">
@@ -181,12 +181,31 @@ function Home() {
               </div>
             </div>
 
-            
-          </div>
-    
-         <div className="col">
+            <br />
+            <div className="card">
+              <div className="bg-image hover-overlay" data-mdb-ripple-init data-mdb-ripple-color="light">
+                <img
+                  src="https://kinsta.com/pt/wp-content/uploads/sites/3/2019/07/plugins-wordpress-de-reviews-1024x512.jpg"
+                  className="img-preco"
+                  style={{ width: '100%', maxWidth: '300px', height: 'auto' }}
+                />
 
-         <h4 className="display-6">Monitoramento de Estoque <i className="fas fa-chart-column"></i></h4>
+                <a href="#!">
+                  <div className="mask" style={{ background: '#87CEEB' }}></div>
+                </a>
+              </div>
+              <div className="card-body">
+                <h6 className="card-title">Tabela de Preço</h6>
+                <p className="card-text"></p>
+                <a href="#!" className="btn btn-info btn-md" data-mdb-ripple-init><Link to="/tabela-de-preco/" style={link}> Gerênciar</Link></a>
+              </div>
+            </div>
+
+          </div>
+
+          <div className="col">
+
+            <h4 className="display-6">Monitoramento de Estoque <i className="fas fa-chart-column"></i></h4>
             <div className="card">
 
               <Chart type="bar" data={chartData} options={chartOptions} />

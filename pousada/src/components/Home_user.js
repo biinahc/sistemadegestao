@@ -135,10 +135,30 @@ function Home_user() {
                             <div className="card-body">
                                 <h6 className="card-title">Gerênciar</h6>
                                 <p className="card-text"></p>
-                                <a href="#!" className="btn btn-info btn-md" data-mdb-ripple-init><Link to="/produtos/''" style={link}> Produtos</Link></a>
+                                <a href="#!" className="btn btn-info btn-md" data-mdb-ripple-init><Link to="/produtos/" style={link}> Produtos</Link></a>
                             </div>
                         </div>
                     </div>
+                    <br />
+                    <div className="card">
+                        <div className="bg-image hover-overlay" data-mdb-ripple-init data-mdb-ripple-color="light">
+                            <img
+                                src="https://kinsta.com/pt/wp-content/uploads/sites/3/2019/07/plugins-wordpress-de-reviews-1024x512.jpg"
+                                className="img-preco"
+                                style={{ width: '100%', maxWidth: '300px', height: 'auto' }}
+                            />
+
+                            <a href="#!">
+                                <div className="mask" style={{ background: '#87CEEB' }}></div>
+                            </a>
+                        </div>
+                        <div className="card-body">
+                            <h6 className="card-title">Tabela de Preço</h6>
+                            <p className="card-text"></p>
+                            <a href="#!" className="btn btn-info btn-md" data-mdb-ripple-init><Link to="/tabela-de-preco/" style={link}> Gerênciar</Link></a>
+                        </div>
+                    </div>
+
 
 
                     <div className="col">
