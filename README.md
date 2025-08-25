@@ -1,18 +1,4 @@
-            * O codigo em geral foi  ajustado para 100% responsive
-            
-            * O login agora identifica o que esta incorrecto caso de error no momento de fazer login, valida se é usuario ou a senha errada
-            
-            * Se implentou um processo para encriptar as senha antes de que sejam salvas no banco
-            
-            * Se implementou um processo para desecriptar as senhas  no memento que for fazer login, para validar o usuario
-            
-             *Foi implementado um processo para manter um padrão no momento de cadastrar Produtos, no campo Nome e Marcas,  também para 
-               Categorias, a primeira letra sempre vai ser maiusculo.
-                
-             *Foi implementado um processo para Limpar os acentos no momento de cadastrar Produtos e Categorias
-            
-            
-            ********************ATENÇÃO *************************
+Em processo 
             
            Instale as siguentes librerias :
             
