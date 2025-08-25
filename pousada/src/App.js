@@ -6,6 +6,7 @@ import Login from './components/Login';
 import Categorias from './components/Categorias';
 import Senhas from './components/Senhas';
 import TabelaDePreco from './components/tabela-de-preco';
+import Estoque from './components/estoque'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -66,6 +67,7 @@ function App() {
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/senhas" element={<Senhas />} />
           <Route path="/tabela-de-preco" element={<TabelaDePreco />} />
+          <Route path="/estoque" element={<Estoque />} /> 
 
 
 
