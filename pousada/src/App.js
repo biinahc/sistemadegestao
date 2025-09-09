@@ -6,77 +6,55 @@ import Login from './components/Login';
 import Categorias from './components/Categorias';
 import Senhas from './components/Senhas';
 import TabelaDePreco from './components/tabela-de-preco';
-import Estoque from './components/estoque'
+import Estoque from './components/estoque';
+import Boletos from './components/Boletos'; 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import React, { useState, useEffect, useRef } from 'react';
-
-
-
-
+import React, { useState, useEffect } from 'react';
+import Financeiro from './components/Financeiro';
 
 function App() {
+  // 🔹 inicializa estados direto do localStorage
+  const role = localStorage.getItem('role');
 
-
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-
+  const [isAuthenticated, setIsAuthenticated] = useState(role === 'admin' || role === 'user');
+  const [isAdmin, setIsAdmin] = useState(role === 'admin');
 
   const handleLogin = () => {
     setIsAuthenticated(true);
-    localStorage.setItem('token', isAuthenticated);
+    setIsAdmin(false);
+    localStorage.setItem('role', 'user');
   };
 
   const handleAdmin = () => {
+    setIsAuthenticated(true);
     setIsAdmin(true);
-    localStorage.setItem('token', isAdmin);
-
+    localStorage.setItem('role', 'admin');
   };
 
-  useEffect(() => {
-    // Verifica si el token está en localStorage
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-      setIsAdmin(true);
-    }
-  }, []);
-
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('role');
     setIsAuthenticated(false);
     setIsAdmin(false);
   };
 
-
-
-
-
   return (
-    <div>
-
-      <Router>
-
-        <Routes>
-
-          <Route path="/" element={<Login onLogin={handleLogin} onAdmin={handleAdmin} onLogout={handleLogout} />} />
-          <Route path="/home" element={isAdmin ? <Home /> : <Navigate to="/" />} />
-          <Route path="/home_user" element={isAuthenticated ? <Home_user /> : <Navigate to="/" />} />
-          <Route path="/usuarios" element={<Users />} />
-          <Route path="/produtos/:flag" element={<Produtos />} />
-          <Route path="/categorias" element={<Categorias />} />
-          <Route path="/senhas" element={<Senhas />} />
-          <Route path="/tabela-de-preco" element={<TabelaDePreco />} />
-          <Route path="/estoque" element={<Estoque />} /> 
-
-
-
-        </Routes>
-
-      </Router>
-
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login onLogin={handleLogin} onAdmin={handleAdmin} onLogout={handleLogout} />} />
+        <Route path="/home" element={isAdmin ? <Home /> : <Navigate to="/" />} />
+        <Route path="/home_user" element={isAuthenticated ? <Home_user /> : <Navigate to="/" />} />
+        <Route path="/usuarios" element={isAdmin ? <Users /> : <Navigate to="/" />} />
+        <Route path="/produtos/:flag" element={isAuthenticated ? <Produtos /> : <Navigate to="/" />} />
+        <Route path="/categorias" element={isAdmin ? <Categorias /> : <Navigate to="/" />} />
+        <Route path="/senhas" element={isAdmin ? <Senhas /> : <Navigate to="/" />} />
+        <Route path="/tabela-de-preco" element={isAuthenticated ? <TabelaDePreco /> : <Navigate to="/" />} />
+        <Route path="/estoque" element={isAuthenticated ? <Estoque /> : <Navigate to="/" />} />
+         <Route path="/Financeiro" element={isAdmin ? <Financeiro onLogout={handleLogout} /> : <Navigate to="/" />} />
+          <Route path="/boletos" element={isAdmin ? <Boletos onLogout={handleLogout} /> : <Navigate to="/" />} />
+      </Routes>
+    </Router>
   );
 }
+
 
 export default App;

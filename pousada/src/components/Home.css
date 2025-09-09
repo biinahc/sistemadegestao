@@ -1,0 +1,61 @@
+/* Estilos gerais da página */
+.home {
+  padding-bottom: 50px;
+  background-color: #f8f9fa; /* Cor de fundo suave */
+}
+
+/* Estilos para os cartões de navegação */
+.navigation-card {
+  margin-bottom: 20px;
+  border: none; /* Remove a borda padrão do cartão */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave para profundidade */
+  transition: transform 0.3s ease-in-out; /* Adiciona uma transição para o efeito de hover */
+}
+
+.navigation-card:hover {
+  transform: translateY(-5px); /* Move o cartão ligeiramente para cima no hover */
+}
+
+.navigation-card .card-body {
+  text-align: center;
+}
+
+.navigation-card .btn {
+  background-color: #007bff; /* Cor azul de informação */
+  border-color: #007bff;
+  color: #fff;
+  text-decoration: none; /* Remove sublinhado dos links */
+  transition: background-color 0.3s;
+}
+
+.navigation-card .btn:hover {
+  background-color: #0056b3; /* Cor azul mais escura no hover */
+  border-color: #004085;
+}
+
+/* Estilos para as imagens dos cartões */
+.navigation-card .img-fluid {
+  border-top-left-radius: calc(0.25rem - 1px);
+  border-top-right-radius: calc(0.25rem - 1px);
+  object-fit: cover; /* Garante que a imagem cubra o espaço sem distorção */
+  height: 120px; /* Altura fixa para as imagens */
+}
+
+/* Estilos para o contêiner do gráfico */
+.chart-container {
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container h4 {
+  margin-bottom: 20px;
+  font-weight: 300;
+  color: #333;
+}
+
+.responsive-chart-container {
+    height: 400px; /* Defina a altura desejada para o gráfico */
+    margin-bottom: 20px;
+}

@@ -1,0 +1,9 @@
+/* src/components/Boletos.css */
+
+.boletos-container {
+    padding: 20px;
+}
+
+.p-datatable {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

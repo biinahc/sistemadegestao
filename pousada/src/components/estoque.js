@@ -23,7 +23,7 @@ import Header_user from './Header_user';
 import Footer from './Footer';
 import { useParams } from 'react-router-dom';
 
-export default function Estoque() {
+export default function Estoque({ onLogout }) {
     let emptyProduct = {
         id: null,
         nome: '',
@@ -35,7 +35,6 @@ export default function Estoque() {
         cost: '0.00',
         price_cash: '0.00',
         price_card: '0.00',
-        // Campos para as novas funcionalidades
         quantidade_adicionada: '',
         new_cost: '',
         new_price_cash: '',
@@ -51,6 +50,8 @@ export default function Estoque() {
     const [addStockDialog, setAddStockDialog] = useState(false);
     const [recordSaleDialog, setRecordSaleDialog] = useState(false);
     const [monthlyProfit, setMonthlyProfit] = useState('0.00');
+    const [totalEstoque, setTotalEstoque] = useState('0.00');
+    const [totalSaidas, setTotalSaidas] = useState('0.00');
     const toast = useRef(null);
     const dt = useRef(null);
     const { flag } = useParams();
@@ -60,14 +61,26 @@ export default function Estoque() {
         { name: 'Cartão', value: 'Cartão' }
     ];
 
-    // Função para buscar os produtos e os dados de lucro
     const fetchData = async () => {
         try {
             const productsResponse = await axios.get('http://localhost:8080/produtos');
             setProducts(productsResponse.data);
 
+            // CÁLCULO 1: VALOR TOTAL DO ESTOQUE ATUAL
+            const valorTotalEstoqueCalculado = productsResponse.data.reduce((sum, product) => {
+                const valorItem = parseFloat(product.status || 0) * parseFloat(product.cost || 0);
+                return sum + valorItem;
+            }, 0);
+            setTotalEstoque(valorTotalEstoqueCalculado.toFixed(2));
+
+            // CÁLCULO 2: TOTAL DE SAÍDAS
+            // AQUI VOCÊ PRECISA TER UM ENDPOINT NO BACKEND QUE FAÇA ESSE CÁLCULO
+            const saidasResponse = await axios.get('http://localhost:8080/produtos/total-saidas');
+            setTotalSaidas(saidasResponse.data.totalSaidas.toFixed(2));
+
+            // CÁLCULO 3: LUCRO DO MÊS
             const profitResponse = await axios.get('http://localhost:8080/produtos/lucro-mes');
-            setMonthlyProfit(profitResponse.data.lucroTotal);
+            setMonthlyProfit(profitResponse.data.lucroTotal.toFixed(2));
         } catch (error) {
             console.error("Erro ao buscar dados:", error);
             toast.current.show({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar dados.', life: 3000 });
@@ -115,8 +128,6 @@ export default function Estoque() {
             </IconField>
         </div>
     );
-    
-    // --- Lógica das Novas Funcionalidades ---
 
     const openAddStockDialog = (product) => {
         setProduct({ ...product, quantidade_adicionada: '', new_cost: product.cost, new_price_cash: product.price_cash, new_price_card: product.price_card });
@@ -138,7 +149,7 @@ export default function Estoque() {
             new_price_cash: parseFloat(new_price_cash),
             new_price_card: parseFloat(new_price_card)
         };
-        
+
         try {
             await axios.put(`http://localhost:8080/produtos/adicionar-estoque/${id}`, payload);
             toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Estoque e preços atualizados!', life: 3000 });
@@ -186,8 +197,6 @@ export default function Estoque() {
         }
     };
 
-    // --- Templates dos Botões e Colunas ---
-
     const actionBodyTemplate = (product) => {
         return (
             <React.Fragment>
@@ -212,7 +221,7 @@ export default function Estoque() {
         }
         return null;
     };
-    
+
     const costBodyTemplate = (rowData) => {
         return `R$ ${parseFloat(rowData.cost).toFixed(2)}`;
     };
@@ -225,7 +234,6 @@ export default function Estoque() {
         return `R$ ${parseFloat(rowData.price_card).toFixed(2)}`;
     };
 
-    // --- Modais ---
     const addStockDialogFooter = (
         <React.Fragment>
             <Button label="Cancelar" className="p-button-danger p-button-sm" icon="pi pi-times" onClick={hideDialog} />
@@ -242,33 +250,41 @@ export default function Estoque() {
 
     return (
         <div>
-            {flag === '1' ? <Header /> : <Header_user />}
+            {flag === '1' ? <Header onLogout={onLogout} /> : <Header_user onLogout={onLogout} />}
             <Toast ref={toast} />
             <br />
-            <div className="container mx-auto p-4">
-                <div className="card text-center mb-4 p-4 shadow-md rounded-lg bg-gray-100">
-                    <h5 className="text-xl font-bold text-gray-700">Lucro do Mês</h5>
-                    <p className="text-4xl font-extrabold text-green-600 mt-2">R$ {parseFloat(monthlyProfit).toFixed(2)}</p>
+            <div className="container mx-auto p-4 flex justify-between gap-4">
+                <div className="card text-center mb-4 p-4 shadow-md rounded-lg bg-gray-100 flex-1">
+                    <h5 className="text-xl font-bold text-gray-700">Valor Total do Estoque</h5>
+                    <p className="text-4xl font-extrabold text-blue-600 mt-2">R$ {totalEstoque}</p>
                 </div>
-                
-                <Toolbar className="mb-4" center={<h4 className="display-7">Controle de Estoque <i className="fas fa-cubes"></i></h4>} />
-                
-                <DataTable ref={dt} value={products} stripedRows paginator rows={10} 
-                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                    currentPageReportTemplate="Página {first} a {last} de {totalRecords} produtos"
-                    globalFilter={globalFilter} header={header} resizableColumns showGridlines>
-                    
-                    <Column body={(rowData, { rowIndex }) => rowIndex + 1} header="#" style={{ minWidth: '3rem' }}></Column>
-                    <Column field="nome" header="Nome" sortable style={{ minWidth: '8rem' }}></Column>
-                    <Column field="marca" header="Marca" sortable style={{ minWidth: '8rem' }}></Column>
-                    <Column field="status" header="Estoque" body={statusBodyTemplate} sortable style={{ minWidth: '6rem' }}></Column>
-                    <Column field="cost" header="Custo" body={costBodyTemplate} sortable style={{ minWidth: '6rem' }}></Column>
-                    <Column field="price_cash" header="Venda (Dinheiro)" body={priceCashBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column field="price_card" header="Venda (Cartão)" body={priceCardBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
-                    <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '15rem' }}></Column>
-                </DataTable>
+                <div className="card text-center mb-4 p-4 shadow-md rounded-lg bg-gray-100 flex-1">
+                    <h5 className="text-xl font-bold text-gray-700">Total de Saídas (Receita)</h5>
+                    <p className="text-4xl font-extrabold text-orange-600 mt-2">R$ {totalSaidas}</p>
+                </div>
+                <div className="card text-center mb-4 p-4 shadow-md rounded-lg bg-gray-100 flex-1">
+                    <h5 className="text-xl font-bold text-gray-700">Lucro do Mês</h5>
+                    <p className="text-4xl font-extrabold text-green-600 mt-2">R$ {monthlyProfit}</p>
+                </div>
             </div>
-            
+
+            <Toolbar className="mb-4" center={<h4 className="display-7">Controle de Estoque <i className="fas fa-cubes"></i></h4>} />
+
+            <DataTable ref={dt} value={products} stripedRows paginator rows={10}
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                currentPageReportTemplate="Página {first} a {last} de {totalRecords} produtos"
+                globalFilter={globalFilter} header={header} resizableColumns showGridlines>
+
+                <Column body={(rowData, { rowIndex }) => rowIndex + 1} header="#" style={{ minWidth: '3rem' }}></Column>
+                <Column field="nome" header="Nome" sortable style={{ minWidth: '8rem' }}></Column>
+                <Column field="marca" header="Marca" sortable style={{ minWidth: '8rem' }}></Column>
+                <Column field="status" header="Estoque" body={statusBodyTemplate} sortable style={{ minWidth: '6rem' }}></Column>
+                <Column field="cost" header="Custo" body={costBodyTemplate} sortable style={{ minWidth: '6rem' }}></Column>
+                <Column field="price_cash" header="Venda (Dinheiro)" body={priceCashBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
+                <Column field="price_card" header="Venda (Cartão)" body={priceCardBodyTemplate} sortable style={{ minWidth: '10rem' }}></Column>
+                <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '15rem' }}></Column>
+            </DataTable>
+
             {/* Modal para Adicionar Estoque e Atualizar Preços */}
             <Dialog visible={addStockDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Adicionar Estoque" modal className="p-fluid" footer={addStockDialogFooter} onHide={hideDialog}>
                 <div className="field">
@@ -323,7 +339,7 @@ export default function Estoque() {
                     {submitted && !product.forma_pagamento && <small className="p-error">Campo obrigatório!</small>}
                 </div>
             </Dialog>
-            
+
             <Footer />
         </div>
     );

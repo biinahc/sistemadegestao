@@ -21,11 +21,7 @@ import Header_user from './Header_user';
 import Footer from './Footer';
 import { useParams } from 'react-router-dom';
 
-
-
-
-
-export default function Produtos(onAdmin) {
+export default function Produtos({ onLogout }) {
     let emptyProduct = {
         id: null,
         tipo_producto: null,
@@ -38,7 +34,6 @@ export default function Produtos(onAdmin) {
         status: '0'
     };
 
-
     const [products, setProducts] = useState(null);
     const [productDialog, setProductDialog] = useState(false);
     const [saidaDialog, setSaidaDialog] = useState(false);
@@ -48,14 +43,10 @@ export default function Produtos(onAdmin) {
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState(null);
-    const [onAdmi, setonAdmi] = useState('');
     const [categorias, setCategorias] = useState([]);
     const toast = useRef(null);
     const dt = useRef(null);
     const { flag } = useParams();
-
-
-
 
     const tipo_compra = [
         { name: 'Kilos', value: 'Kilos' },
@@ -68,22 +59,23 @@ export default function Produtos(onAdmin) {
         { name: 'Metro', value: 'Metro' },
         { name: 'Metro-m²', value: 'Metro-m²' },
         { name: 'Pacote', value: 'Pacote' }
-        
     ];
 
-    useEffect(() => {
+    const fetchData = () => {
         axios.get('http://localhost:8080/produtos')
-            .then(response => setProducts(response.data));
-    }, [product]);
+            .then(response => setProducts(response.data))
+            .catch(error => console.error("Erro ao buscar produtos:", error));
+    };
 
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     useEffect(() => {
         axios.get('http://localhost:8080/categorias')
-            .then(response => setCategorias(response.data));
+            .then(response => setCategorias(response.data))
+            .catch(error => console.error("Erro ao buscar categorias:", error));
     }, []);
-
-
-
 
     const openNew = () => {
         setProduct(emptyProduct);
@@ -105,89 +97,54 @@ export default function Produtos(onAdmin) {
         setDeleteProductsDialog(false);
     };
 
-
-
-
     const saveProduct = () => {
         setSubmitted(true);
-
-
-
-        if (product.nome == '' || product.quantidade == '' || product.quantidade_minima == '' || product.lt_kl_unid == '' || product.marca == '' || product.tipo_producto == '') {
-            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Campo em branco', life: 3000 });
-
-        } else {
-            let _products = [...products];
-            let _product = { ...product };
-            if (product.id) {
-                axios.put('http://localhost:8080/produtos/update/' + product.id, _product)
-                    .then(response => {
-                        {/*console.log(_product);*/ }
-                        toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Item Atualizado', life: 3000 });
-                    })
-                    .catch(error => {
-                        toast.current.show({severity: 'error', summary: 'Error', detail: error.response.data.message, life: 3000});
-                        console.log(error);
-                    });
-
-            } else {
-             
-          
-                axios.post('http://localhost:8080/produtos/create', _product)
-                    .then(response => {
-                        console.log(_product);
-                        toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Item criado !!', life: 3000 });
-                    })
-                    .catch(error => {
-                        toast.current.show({ severity: 'error', summary: 'Error', detail: error.response.data.message, life: 3000});
-                        console.log(error);
-                    });
-
-
-            }
-
-            setProduct(emptyProduct);
-            setProductDialog(false);
-            setProducts(_products);
-
-
-
+        if (!product.nome || !product.quantidade || !product.quantidade_minima || !product.lt_kl_unid || !product.marca || !product.tipo_producto) {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Preencha todos os campos.', life: 3000 });
+            return;
         }
 
-
+        let _product = { ...product };
+        if (product.id) {
+            axios.put('http://localhost:8080/produtos/update/' + product.id, _product)
+                .then(() => {
+                    toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Item Atualizado', life: 3000 });
+                    fetchData(); // Atualiza a lista após a operação
+                })
+                .catch(error => {
+                    toast.current.show({ severity: 'error', summary: 'Error', detail: error.response.data.message, life: 3000 });
+                });
+        } else {
+            axios.post('http://localhost:8080/produtos/create', _product)
+                .then(() => {
+                    toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Item criado!', life: 3000 });
+                    fetchData(); // Atualiza a lista após a operação
+                })
+                .catch(error => {
+                    toast.current.show({ severity: 'error', summary: 'Error', detail: error.response.data.message, life: 3000 });
+                });
+        }
+        setProductDialog(false);
     };
-
-
 
     const saveSaida = () => {
         setSubmitted(true);
         let _product = { ...product };
 
-        console.log(product);
-
-        if (product.saida > product.status) {
-            toast.current.show({ severity: 'warn', summary: 'Observação', detail: 'Saida é maior que a quantidade atual', life: 4000 });
-
+        if (_product.saida > _product.status) {
+            toast.current.show({ severity: 'warn', summary: 'Observação', detail: 'Saída é maior que a quantidade atual', life: 4000 });
         } else {
-           
-            axios.put('http://localhost:8080/produtos/update/' + product.id, _product, _product.bandeira = 1)
-                .then(response => {
-
-                    toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Saida e Entrada cadastrada', life: 3000 });
+            axios.put('http://localhost:8080/produtos/update/' + _product.id, { ..._product, bandeira: 1 })
+                .then(() => {
+                    toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Saída e Entrada cadastrada', life: 3000 });
+                    fetchData(); // Atualiza a lista após a operação
                 })
                 .catch(error => {
                     console.log(error);
                 });
-
-
             setSaidaDialog(false);
-            setProduct(emptyProduct);
-            setProduct(_product);
-
         }
     };
-
-
 
     const editProduct = (product) => {
         setProduct({ ...product });
@@ -202,86 +159,63 @@ export default function Produtos(onAdmin) {
     const confirmDeleteProduct = (product) => {
         setProduct(product);
         setDeleteProductDialog(true);
-
     };
 
     const deleteProduct = () => {
-
         let _product = { ...product };
-
-
         axios.delete('http://localhost:8080/produtos/' + _product.id)
-            .then(response => {
-
+            .then(() => {
                 toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Item excluído', life: 3000 });
+                fetchData(); // Atualiza a lista após a operação
             })
             .catch(error => {
                 console.log(error);
             });
-
         setDeleteProductDialog(false);
-        setProduct(emptyProduct);
-        setProduct(_product);
-
     };
 
-
     const deleteSelectedProducts = () => {
-        let ids = [];
-        ids = selectedProducts.map(item => (item.id))
-
-
+        const ids = selectedProducts.map(item => item.id);
         axios.delete('http://localhost:8080/items/produtos', { data: { ids: ids } })
-            .then(response => {
-
+            .then(() => {
                 toast.current.show({ severity: 'success', summary: 'Sucesso', detail: 'Items excluídos', life: 3000 });
-
+                fetchData(); // Atualiza a lista após a operação
             })
             .catch(error => console.error(error));
 
         setDeleteProductsDialog(false);
         setSelectedProducts(null);
-        setProduct(emptyProduct);
-
     };
-
-
 
     const exportCSV = () => {
         dt.current.exportCSV();
     };
 
-
-
     const confirmDeleteSelected = () => {
         setDeleteProductsDialog(true);
     };
 
-
     const onInputChange = (e, nome) => {
         const val = (e.target && e.target.value) || '';
         let _product = { ...product };
-
         _product[`${nome}`] = val;
-
-
         setProduct(_product);
     };
 
     const onInputNumberChange = (e, name) => {
         const newValue = (e.target && e.target.value) || '';
-        if(newValue >= 0 || newValue === '') {
+        if (newValue >= 0 || newValue === '') {
             let _product = { ...product };
-            _product[`${name}`] = newValue;        
+            _product[`${name}`] = newValue;
             setProduct(_product);
         }
-    }
+    };
 
     const leftToolbarTemplate = () => {
         return (
             <div className="flex flex-wrap gap-2">
                 <Button className="btn btn-outline-success btn-md" label="Criar" icon="pi pi-plus" severity="success" onClick={openNew} />
-                &nbsp;  &nbsp;  &nbsp;  &nbsp;
+                &nbsp; &nbsp; &nbsp; &nbsp;
                 <Button className="btn btn-outline-danger btn-md" label="Apagar" icon="pi pi-trash" severity="danger" onClick={confirmDeleteSelected} disabled={!selectedProducts || !selectedProducts.length} />
             </div>
         );
@@ -289,37 +223,29 @@ export default function Produtos(onAdmin) {
 
     const rightToolbarTemplate = () => {
         return <Button label="Exportar" icon="pi pi-upload" className="btn btn-outline-info btn-md" onClick={exportCSV} />;
-
     };
 
     const centerToolbarTemplate = () => {
-        return <h4 class="display-7"> Produtos <i class="fas fa-shopping-cart"></i></h4>
+        return <h4 className="display-7"> Produtos <i className="fas fa-shopping-cart"></i></h4>
     };
-
 
     const actionBodyTemplate = (product) => {
         return (
             <React.Fragment>
-                <Button icon="pi pi-upload" rounded outlined severity="warning" className=" btn btn-outline-warning btn-sm" onClick={() => saidaProdut(product)} />
+                <Button icon="pi pi-upload" rounded outlined severity="warning" className="btn btn-outline-warning btn-sm" onClick={() => saidaProdut(product)} />
                 &nbsp;
-                <Button icon="pi pi-pencil" rounded outlined className=" btn btn-outline-info btn-sm" onClick={() => editProduct(product)} />
+                <Button icon="pi pi-pencil" rounded outlined className="btn btn-outline-info btn-sm" onClick={() => editProduct(product)} />
                 &nbsp;
-                <Button icon="pi pi-trash" rounded outlined severity="danger" className=" btn btn-outline-danger btn-sm" onClick={() => confirmDeleteProduct(product)} />
-
-
+                <Button icon="pi pi-trash" rounded outlined severity="danger" className="btn btn-outline-danger btn-sm" onClick={() => confirmDeleteProduct(product)} />
             </React.Fragment>
         );
     };
-
 
     const statusBodyTemplate = (product) => {
         return <Tag value={product.status} severity={getSeverity(product)}></Tag>;
     };
 
-
-
     const getSeverity = (product) => {
-
         if (product.status > product.quantidade_minima) {
             return 'success';
         } else if (product.status <= product.quantidade_minima) {
@@ -329,13 +255,10 @@ export default function Produtos(onAdmin) {
 
     const header = (
         <div className="flex flex-wrap gap-2 align-items-center justify-content-between">
-
-
             <IconField iconPosition="left" >
                 <InputIcon className="pi pi-search" />
                 <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Buscar..." />
             </IconField>
-
         </div>
     );
     const productDialogFooter = (
@@ -371,30 +294,24 @@ export default function Produtos(onAdmin) {
         margin: "auto",
         padding: "10px",
         Width: '100%'
-
-
     };
 
     const footer = `Total de ${products ? products.length : 0} produtos cadastrados.`;
 
     return (
         <div>
-           
-            {flag === '1' ? <Header /> : <Header_user />}
-             <Toast ref={toast} />
+            {flag === '1' ? <Header onLogout={onLogout} /> : <Header_user onLogout={onLogout} />}
+            <Toast ref={toast} />
             <br />
-
             <div style={dataTable}>
-               
                 <div className="card">
                     <Toolbar className="mb-4" left={leftToolbarTemplate} center={centerToolbarTemplate} right={rightToolbarTemplate}></Toolbar>
-
                     <DataTable ref={dt} footer={footer} value={products} stripedRows selection={selectedProducts} onSelectionChange={(e) => setSelectedProducts(e.value)}
                         dataKey="id" paginator rows={10} rowsPerPageOptions={[5, 10, 25]} className="datatable-responsive"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Página {first} de {last} a {totalRecords} produtos" globalFilter={globalFilter} header={header} resizableColumns showGridlines>
                         <Column selectionMode="multiple" exportable={false}></Column>
-                        <Column body={(rowData, {rowIndex}) => rowIndex + 1} header="#" sortable style={{minWidth: '3rem'}}></Column>
+                        <Column body={(rowData, { rowIndex }) => rowIndex + 1} header="#" sortable style={{ minWidth: '3rem' }}></Column>
                         <Column field="tipo_producto" header="Tipo de Produto" sortable style={{ minWidth: '6rem' }}></Column>
                         <Column field="nome" header="Nome" sortable style={{ minWidth: '6rem' }}></Column>
                         <Column field="quantidade" header="Quant." sortable style={{ minWidth: '100px' }}></Column>
@@ -404,156 +321,90 @@ export default function Produtos(onAdmin) {
                         <Column field="updatedAt" header="Editado" sortable style={{ minWidth: '100px' }}></Column>
                         <Column field="status" header="Status" body={statusBodyTemplate} sortable style={{ minWidth: '6rem' }}></Column>
                         <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '9rem' }}></Column>
-                        
                     </DataTable>
-
                 </div>
             </div>
-            {/************************************************************** MODALES ***************************************************************** */}
 
-
+            {/* MODALS */}
             <Dialog visible={productDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Produto" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-
-
                 <div className="field">
-                    <label htmlFor="senha" className="font-bold">
-                        Categoria de Produto:
-                    </label>
-
-
-                    <select id="tipo_producto" class="form-select" value={product.tipo_producto} onChange={(e) => onInputChange(e, 'tipo_producto')} required>
-    <option selected value=""></option>
-    {categorias.map((option, index) => (
-        <option key={index} value={option.nome}>{option.nome}</option>
-    ))}
-</select>
+                    <label htmlFor="senha" className="font-bold">Categoria de Produto:</label>
+                    <select id="tipo_producto" className="form-select" value={product.tipo_producto} onChange={(e) => onInputChange(e, 'tipo_producto')} required>
+                        <option value=""></option>
+                        {categorias.map((option, index) => (
+                            <option key={index} value={option.nome}>{option.nome}</option>
+                        ))}
+                    </select>
                 </div>
-
                 <div className="field">
-                    <label htmlFor="name" className="font-bold">
-                        Nome:
-                    </label>
+                    <label htmlFor="name" className="font-bold">Nome:</label>
                     <InputText id="nome" value={product.nome} onChange={(e) => onInputChange(e, 'nome')} className={classNames({ 'p-invalid': submitted && !product.nome })} />
                     {submitted && !product.nome && <small className="p-error">Campo é obrigatório!</small>}
                 </div>
                 <div className="field">
-
-                    {product.id ?
-
-                        <InputText hidden type="number" disabled id="quantidade" value={product.quantidade} onChange={(e) => onInputChange(e, 'quantidade')} equired rows={2} cols={20} />
-
-                        :
-                        <><label htmlFor="quantidade" className="font-bold">
-                            Quantidade em estoque:
-                        </label>
+                    {product.id ? (
+                        <InputText hidden type="number" disabled id="quantidade" value={product.quantidade} onChange={(e) => onInputChange(e, 'quantidade')} rows={2} cols={20} />
+                    ) : (
+                        <>
+                            <label htmlFor="quantidade" className="font-bold">Quantidade em estoque:</label>
                             <InputText type="number" id="quantidade" value={product.quantidade} min={0} onChange={(e) => onInputNumberChange(e, 'quantidade')} rows={2} cols={20} className={classNames({ 'p-invalid': submitted && !product.quantidade })} />
                             {submitted && !product.quantidade && <small className="p-error">Campo é obrigatório!</small>}
                         </>
-                    }
-
+                    )}
                 </div>
-
                 <div className="field">
-
-                    <label htmlFor="quantidade_minima" className="font-bold">
-                        Quantidade para gerar alerta de baixo estoque:
-                    </label>
-                    <InputText type="number" id="quantidade_minima" value={product.quantidade_minima} min={0} onChange={(e) => onInputNumberChange(e, 'quantidade_minima')} equired rows={2} cols={20} className={classNames({ 'p-invalid': submitted && !product.quantidade_minima })} />
+                    <label htmlFor="quantidade_minima" className="font-bold">Quantidade para gerar alerta de baixo estoque:</label>
+                    <InputText type="number" id="quantidade_minima" value={product.quantidade_minima} min={0} onChange={(e) => onInputNumberChange(e, 'quantidade_minima')} required rows={2} cols={20} className={classNames({ 'p-invalid': submitted && !product.quantidade_minima })} />
                     {submitted && !product.quantidade_minima && <small className="p-error">Campo é obrigatório!</small>}
-
-
-                </div>
-
-                <div className="field">
-                    <label htmlFor="senha" className="font-bold">
-                        Tipo de Unidade:
-                    </label>
-                    <Dropdown className="w-full md:w-14rem" id="lt_kl_unid" options={tipo_compra} optionLabel="name" required autoFocus value={product.lt_kl_unid} onChange={(e) => onInputChange(e, 'lt_kl_unid')}
-
-                    />
                 </div>
                 <div className="field">
-                    <label htmlFor="name" className="font-bold">
-                        Marca do Produto:
-                    </label>
+                    <label htmlFor="senha" className="font-bold">Tipo de Unidade:</label>
+                    <Dropdown className="w-full md:w-14rem" id="lt_kl_unid" options={tipo_compra} optionLabel="name" required autoFocus value={product.lt_kl_unid} onChange={(e) => onInputChange(e, 'lt_kl_unid')} />
+                </div>
+                <div className="field">
+                    <label htmlFor="name" className="font-bold">Marca do Produto:</label>
                     <InputText id="marca" value={product.marca} onChange={(e) => onInputChange(e, 'marca')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.marca })} />
                     {submitted && !product.quantidade_marca && <small className="p-error">Campo é obligatorio!</small>}
                 </div>
-
-
-
             </Dialog>
 
-
             <Dialog visible={saidaDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Saida de Produto" modal className="p-fluid" footer={saidatDialogFooter} onHide={hideDialog}>
-
-
                 <div className="field">
-                    <label htmlFor="senha" className="font-bold">
-                        Categoria de Produto:
-                    </label>
-                    <select disabled id="tipo_producto" class="form-select" value={product.tipo_producto} onChange={(e) => onInputChange(e, 'tipo_producto')}>
+                    <label htmlFor="senha" className="font-bold">Categoria de Produto:</label>
+                    <select disabled id="tipo_producto" className="form-select" value={product.tipo_producto} onChange={(e) => onInputChange(e, 'tipo_producto')}>
                         {categorias.map(option => (
-                            <>
-
-                                <option value={option.nome}>{option.nome}</option>
-
-                            </>
+                            <option key={option.nome} value={option.nome}>{option.nome}</option>
                         ))}
                     </select>
                 </div>
-
                 <div className="field">
-                    <label htmlFor="name" className="font-bold">
-                        Nome:
-                    </label>
+                    <label htmlFor="name" className="font-bold">Nome:</label>
                     <InputText disabled id="nome" value={product.nome} onChange={(e) => onInputChange(e, 'nome')} required className={classNames({ 'p-invalid': submitted && !product.nome })} />
-
                 </div>
-
                 <div className="field">
-                    <label htmlFor="name" className="font-bold">
-                        Marca do produto:
-                    </label>
+                    <label htmlFor="name" className="font-bold">Marca do produto:</label>
                     <InputText disabled id="marca" value={product.marca} onChange={(e) => onInputChange(e, 'marca')} required autoFocus />
-
                 </div>
                 <div className="field">
-
-
-                    <label htmlFor="quantidade" className="font-bold">
-                        Quantidade atual no estoque:
-                    </label>
-                    <InputText type="number" id="status" value={product.status} onChange={(e) => onInputChange(e, 'status')} equired rows={2} cols={20} />
-
-
+                    <label htmlFor="quantidade" className="font-bold">Quantidade atual no estoque:</label>
+                    <InputText type="number" id="status" value={product.status} onChange={(e) => onInputChange(e, 'status')} required rows={2} cols={20} />
                 </div>
-
-            
                 <div className="field">
-                    <label htmlFor="name" className="font-bold">
-                        Quantidade de Saída:
-                    </label>
+                    <label htmlFor="name" className="font-bold">Quantidade de Saída:</label>
                     <InputText type="number" id="saida" min={0} onChange={(e) => onInputNumberChange(e, 'saida')} required autoFocus />
-                    {product.saida > product.status ?
+                    {product.saida > product.status ? (
                         <small className="p-error pi pi-exclamation-triangle mr-3"> Não há quantidade sufuciente para saída! </small>
-
-                        :
-
-                        <small></small>}
+                    ) : (
+                        <small></small>
+                    )}
                 </div>
-
-
-
             </Dialog>
 
             <Dialog visible={deleteProductDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Confirmar" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
                 <div className="confirmation-content">
                     <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem', color: 'red' }} />
                     {product && (
-                        <span>
-                        Tem certeza de que quer excluir o Item: <b>{product.nome}</b>?
-                        </span>
+                        <span>Tem certeza de que quer excluir o Item: <b>{product.nome}</b>?</span>
                     )}
                 </div>
             </Dialog>
@@ -564,7 +415,6 @@ export default function Produtos(onAdmin) {
                     {product && <span>Tem certeza na exclusão dos itens selecionados ?</span>}
                 </div>
             </Dialog>
-
 
             <Footer />
         </div>
